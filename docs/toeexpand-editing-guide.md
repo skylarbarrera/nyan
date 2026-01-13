@@ -291,36 +291,127 @@ gain 0 10
 
 DATs with text content have a `.text` file.
 
-### Format
+### IMPORTANT: Binary Format
+
+**`.text` files are NOT plain text!** They have a binary header that must be preserved.
+
+### Binary Structure
 
 ```
-LINE_COUNT
-*                 FIRST_LINE_CONTENT
-REMAINING LINES...
+Bytes 0-2:    "2\n*"              (3 bytes - format marker)
+Bytes 3-22:   Binary metadata     (20 bytes of flags/settings)
+Bytes 23-24:  Content length      (2 bytes, big-endian uint16)
+Bytes 25+:    Actual text content (UTF-8 encoded)
 ```
 
-The header is: `LINE_COUNT` then `* ` followed by spaces and the first line.
+### Binary Header (Hex)
 
-### Example: Python Script
-
+The 20-byte metadata section is typically:
 ```
-2
-*                 # My script
-print('hello')
+00 00 00 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00 02 00 00
 ```
 
-### Example: Longer Script
+### Why Plain Text Fails
 
+If you write plain text to a `.text` file, TD will read it as empty because it expects the binary header. The content gets lost on collapse.
+
+### Creating .text Files Programmatically
+
+Use Python to create properly formatted `.text` files:
+
+```python
+import struct
+
+def write_td_text_file(filepath, content):
+    """Write a TouchDesigner .text file with proper binary header."""
+
+    # Header marker
+    header = b'2\n*'
+
+    # Binary metadata (20 bytes)
+    meta = bytes([0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,2,0,0])
+
+    # Encode content
+    content_bytes = content.encode('utf-8')
+    length = len(content_bytes)
+
+    # Write file
+    with open(filepath, 'wb') as f:
+        f.write(header)
+        f.write(meta)
+        f.write(struct.pack('>H', length))  # 2-byte big-endian length
+        f.write(content_bytes)
+
+# Example usage
+script = '''# My callback script
+
+def onOffToOn(channel, sampleIndex, val, prev):
+    print(f"Channel {channel.name} triggered")
+    return
+
+def onValueChange(channel, sampleIndex, val, prev):
+    return
+'''
+
+write_td_text_file('mynode.text', script)
 ```
-5
-*                 import td
-def onStart():
-    print('Starting')
 
-setup()
+### Reading .text Files
+
+To read the content (skipping the 27-byte header):
+
+```python
+def read_td_text_file(filepath):
+    """Read content from a TouchDesigner .text file."""
+    with open(filepath, 'rb') as f:
+        f.seek(27)  # Skip header (3 + 20 + 2 + 2 bytes)
+        return f.read().decode('utf-8')
 ```
 
-**Note:** The `*` line padding is important. Use spaces to align with actual content start.
+Or with bash:
+```bash
+tail -c +28 mynode.text
+```
+
+### Copying Existing Scripts
+
+The safest approach is to copy an existing `.text` file's header:
+
+```bash
+# Extract header from working file
+head -c 27 working.text > header.bin
+
+# Combine with new content
+cat header.bin > new.text
+echo "your script content" >> new.text
+```
+
+Then manually fix the length bytes (bytes 23-24) if content length differs significantly.
+
+### ChopExec DAT Callbacks
+
+When creating ChopExec scripts, include all expected callbacks or TD will show warnings:
+
+```python
+script = '''# Description of what this does
+
+def onOffToOn(channel, sampleIndex, val, prev):
+    # Called when channel goes from off to on
+    return
+
+def onOnToOff(channel, sampleIndex, val, prev):
+    # Called when channel goes from on to off
+    return
+
+def whileOn(channel, sampleIndex, val, prev):
+    # Called every frame while channel is on
+    return
+
+def onValueChange(channel, sampleIndex, val, prev):
+    # Called when any value changes
+    return
+'''
+```
 
 ---
 

@@ -122,6 +122,29 @@ end
 
 **Verify your chain:** Before collapsing, check every `.n` file that should receive input has an `inputs` block pointing to the correct source.
 
+### CRITICAL: .text Files Are Binary
+
+**`.text` files (scripts/text DATs) have a binary header - NOT plain text!**
+
+```
+Bytes 0-2:   "2\n*"           (format marker)
+Bytes 3-24:  Binary metadata  (22 bytes)
+Bytes 25-26: Content length   (big-endian uint16)
+Bytes 27+:   Actual content   (UTF-8)
+```
+
+Use Python to write `.text` files:
+```python
+import struct
+header = b'2\n*'
+meta = bytes([0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,2,0,0])
+content = script.encode('utf-8')
+with open('node.text', 'wb') as f:
+    f.write(header + meta + struct.pack('>H', len(content)) + content)
+```
+
+See `docs/toeexpand-editing-guide.md` for full details.
+
 ## Naming
 
 Always use descriptive names:
