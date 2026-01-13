@@ -2,37 +2,11 @@
 
 You have MCP tools to control TouchDesigner directly. USE THEM. Don't just describe what to do - create the nodes, wire them, set parameters.
 
-## MCP Tools - Use Heavily
-
-### Creating Nodes
-```
-create_node(type, name, parent_path)
-```
-Always specify meaningful names. Never use defaults like "noise1" - use "noise_base" or "noise_displacement".
-
-### Wiring
-```
-connect_nodes(from_op, to_op)
-```
-Wire as you build. Don't create all nodes then wire - create, wire, create, wire.
-
-### Parameters
-```
-set_parameter(op_path, param_name, value)
-update_parameters(op_path, {param: value, ...})
-```
-Set parameters immediately after creating. Don't leave defaults.
-
-### Query Before Building
-```
-get_nodes(parent_path)
-get_node_detail(op_path)
-```
-Check what exists before creating. Avoid duplicates.
+**Full operator reference:** See `td-operators.md` for complete list of all 600+ operators.
 
 ---
 
-## Operator Families
+## Quick Operator Reference (Most Common)
 
 ### TOPs (Texture Operators) - 2D Images/Video
 | Operator | Use When |
@@ -89,6 +63,78 @@ Check what exists before creating. Avoid duplicates.
 | `mergeSOP` | Combine multiple SOPs |
 | `nullSOP` | Clean output |
 | `scriptSOP` | Procedural geometry via Python |
+| `particleSOP` | Legacy particle system (see POPs below) |
+
+### POPs (Particle Operators) - Particle Systems
+POPs create and simulate particle systems. Use for explosions, trails, swarms, rain, fire, etc.
+
+**Emitters - Create Particles**
+| Operator | Use When |
+|----------|----------|
+| `pointEmitPOP` | Emit from point positions |
+| `sourceEmitPOP` | Emit from SOP geometry surface |
+| `sphereEmitPOP` | Emit from spherical volume |
+| `lineEmitPOP` | Emit along a line |
+
+**Forces - Affect Movement**
+| Operator | Use When |
+|----------|----------|
+| `forcePOP` | Constant directional force (gravity, wind) |
+| `attractorPOP` | Pull toward point/geometry |
+| `axisForcePOP` | Force along/around axis |
+| `curlNoisePOP` | Turbulent organic motion |
+| `dragPOP` | Air resistance, slow down |
+| `limitPOP` | Constrain to bounds |
+| `turbulencePOP` | Random chaotic motion |
+| `windPOP` | Directional wind with noise |
+
+**Collision**
+| Operator | Use When |
+|----------|----------|
+| `collisionPOP` | Bounce off geometry |
+
+**State/Kill**
+| Operator | Use When |
+|----------|----------|
+| `agePOP` | Modify particle age/life |
+| `killPOP` | Remove particles (bounds, age, etc) |
+| `speedLimitPOP` | Clamp velocity |
+
+**Rendering**
+| Operator | Use When |
+|----------|----------|
+| `spritePOP` | Render as 2D sprites/images |
+| `renderPOP` | Point/line rendering |
+
+**POP Workflow**
+```
+Emitter → Forces → Collision → Kill → Render
+```
+
+1. Start with emitter (sourceEmitPOP from geometry, or pointEmitPOP)
+2. Add forces (forcePOP for gravity, curlNoisePOP for organic motion)
+3. Add collision if needed (collisionPOP)
+4. Kill old particles (killPOP with age limit)
+5. Render via geometryCOMP or spriteMAT
+
+**Example: Basic Particle System**
+```python
+# Create particle network
+parent = op('/project1')
+popnet = parent.create(popnetCOMP, 'particles')
+
+# Inside popnet, create:
+# - sourceEmitPOP 'emit' (set source SOP)
+# - forcePOP 'gravity' (ty = -9.8)
+# - curlNoisePOP 'turbulence'
+# - killPOP 'kill_old' (life = 2.0)
+```
+
+**Modern Alternative: Instancing**
+For high particle counts, consider using CHOPs + instancing instead of POPs:
+- Generate positions in CHOP (noiseCHOP, scriptCHOP)
+- Instance geometry with CHOP data
+- More GPU efficient for 10k+ particles
 
 ### DATs (Data Operators) - Text/Tables/Scripts
 | Operator | Use When |
