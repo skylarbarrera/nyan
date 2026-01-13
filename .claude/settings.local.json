@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "touchdesigner": {
+      "command": "npx",
+      "args": ["-y", "touchdesigner-mcp-server@latest", "--stdio"]
+    },
+    "touchdesigner-docs": {
+      "command": "npx",
+      "args": ["-y", "@bottobot/touchdesigner-mcp-server", "--stdio"]
+    }
+  }
+}

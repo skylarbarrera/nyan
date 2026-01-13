@@ -1,0 +1,97 @@
+NYAN - IMPROVEMENT IDEAS & FUTURE ENHANCEMENTS
+===============================================
+
+This file contains potential improvements beyond the basic Claude tooling setup.
+
+## MCP Server Enhancements
+
+### Live State Sync
+- WebSocket bridge for real-time TD state → Claude awareness
+- Automatic node graph diffing to track changes
+- Parameter change notifications for reactive workflows
+
+### Template Library MCP
+- Custom MCP server exposing reusable .tox components
+- Parameterized templates: "create audio-reactive system with 4 bands"
+- Version-controlled component library
+
+## Claude Skills (If Implemented)
+
+### /td-node
+Create TouchDesigner nodes via natural language:
+  "/td-node noise feeding into a feedback loop with blur"
+
+### /td-analyze
+Analyze current TD network structure:
+  "/td-analyze" → returns network topology, bottlenecks, optimization suggestions
+
+### /td-export
+Export Python scripts from TD back to src/:
+  "/td-export script1" → extracts and formats for version control
+
+## Python Tooling Extensions
+
+### TD Type Stubs
+- Generate .pyi stubs from TouchDesigner's internal Python API
+- Enable pyright/mypy checking for TD scripts
+- Auto-complete in VS Code for op(), par., etc.
+
+### Hot Reload Bridge
+- File watcher that pushes src/ changes into TD DATs
+- No manual "reload" needed during development
+- Works via TD's built-in HTTP server or MCP
+
+### Test Framework
+- pytest fixtures that mock TD's op() and par objects
+- Unit test Python logic outside of TouchDesigner
+- CI/CD pipeline for script validation
+
+## Network Patterns Library
+
+### Common Systems (as documented patterns)
+- Audio-reactive: FFT → CHOP math → instancing
+- Video feedback: TOP chain with delay/composite
+- Data visualization: Table DAT → instanced geometry
+- OSC/MIDI input: CHOP routing → parameter mapping
+
+### Architecture Templates
+- Main timeline with cue system
+- Multi-output projection mapping base
+- Interactive installation with sensor input
+- Live performance rig with MIDI control
+
+## Windows-Specific
+
+### PowerShell Scripts
+- `scripts/start-td.ps1` - Launch TD with project loaded
+- `scripts/sync-scripts.ps1` - Push src/ to TD project
+
+### Path Handling
+- .env file for TD installation path
+- Cross-platform path resolution in Python utils
+
+## Integration Ideas
+
+### Git Hooks
+- Pre-commit: Lint Python, validate JSON configs
+- Post-checkout: Notify if .toe file changed (manual reload needed)
+
+### Asset Pipeline
+- Watch folder for new media → auto-import to TD
+- Texture optimization (resize, format conversion)
+- Media manifest for project dependencies
+
+## Performance Monitoring
+
+### Metrics Collection
+- Frame time logging from TD
+- GPU/CPU usage correlation with node complexity
+- Automated bottleneck detection
+
+### Profiling Integration
+- Export TD's cook times to analyzable format
+- Compare before/after optimization attempts
+
+===============================================
+Priority: Start with TD Type Stubs and Hot Reload Bridge
+These provide the most immediate development quality-of-life improvements.

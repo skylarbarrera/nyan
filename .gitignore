@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+
+# TouchDesigner
+*.toe.autosave
+*.toe.crash
+*.toe.*.crash
+Backup/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Claude cache
+.claude/tsc-cache/
+.tldr/
