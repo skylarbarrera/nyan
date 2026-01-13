@@ -1,0 +1,10 @@
+{
+  "name": "nyan",
+  "version": "1.0.0",
+  "description": "TouchDesigner + Claude Code integration",
+  "scripts": {
+    "new": "node scripts/new-project.js",
+    "setup": "node scripts/setup.js",
+    "fix-path": "node scripts/fix-path.js"
+  }
+}

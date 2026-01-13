@@ -6,7 +6,11 @@ __pycache__/
 venv/
 .env
 
-# TouchDesigner
+# TouchDesigner projects (local work, not tracked)
+td/*
+!td/.gitkeep
+
+# TouchDesigner temp files
 *.toe.autosave
 *.toe.crash
 *.toe.*.crash
