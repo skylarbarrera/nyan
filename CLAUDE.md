@@ -60,3 +60,49 @@ op('geo1').pars('t?')  # Get tx, ty, tz
 2. Write Python scripts in `/src` for complex logic
 3. Reference scripts from Script DATs in TD
 4. Test changes live in TouchDesigner
+
+## TouchDesigner Best Practices
+
+### Node Organization
+- Keep related nodes grouped together visually
+- Use consistent left-to-right or top-to-bottom signal flow
+- Place source/input nodes on the left, output nodes on the right
+- Position COMPs (camera, light, geo) near their associated render TOPs
+- Keep MCP server and utility components at the bottom or edge of network
+- Use `nodeX` and `nodeY` properties to set positions programmatically
+
+### Naming Conventions
+- Use descriptive lowercase names with underscores: `particle_geo`, `audio_analysis`
+- Suffix outputs with numbers or `_out`: `render1`, `final_out`
+- Prefix by function when grouping: `fx_blur`, `fx_feedback`, `src_video`
+- Keep names short but meaningful
+
+### Network Layout Guidelines
+```
+Spacing: ~200-300 units between nodes horizontally
+         ~100-150 units between nodes vertically
+Signal flow: Left → Right (primary)
+             Top → Bottom (secondary inputs like forces, controls)
+```
+
+### Performance Optimization
+- Use Null TOPs as checkpoints to cache expensive operations
+- Set appropriate resolution - don't render at 4K if 1080p works
+- Cook only what's needed: use `bypass` and `lock` on unused branches
+- Limit particle counts and lifespans to what's visually necessary
+- Use `performanceMonitor` to identify bottlenecks
+- Prefer TOPs over SOPs for 2D operations (GPU vs CPU)
+- Keep CHOP sample rates as low as acceptable
+
+### Particle Systems (POPs)
+- Use Force SOPs on second input for physics behaviors
+- Enable `dodrag` and `domass` for realistic motion
+- Add turbulence (`turbx/y/z`) for organic movement
+- Keep birth rates reasonable (100-1000 typical)
+- Set appropriate limits to cull off-screen particles
+
+### Rendering
+- Always specify camera and lights explicitly on Render TOPs
+- Use appropriate anti-aliasing (4x default, 8x for final)
+- Match resolution to output requirements
+- Use Null TOP after Render TOP for flexibility in downstream processing
