@@ -86,6 +86,42 @@ When TD is closed or you want version control:
 3. Run `toecollapse project.toe.toc`
 4. Open in TD to verify
 
+### CRITICAL: Wiring Nodes
+
+**Nodes without `inputs` blocks are ORPHANED.** Every node that receives input MUST declare its source:
+
+```
+TOP:level
+tile 250 100 130 90
+flags =  viewer 1 parlanguage 0
+inputs
+{
+0 	noise_source
+}
+color 0.5 0.5 0.5
+end
+```
+
+**Rules:**
+- `inputs` block goes AFTER `flags`, BEFORE `color`
+- Format: `INPUT_INDEX<TAB>SOURCE_NODE_NAME` (use actual TAB, not spaces)
+- Source node must exist (name must match exactly, case-sensitive)
+- Multi-input nodes list each input on separate line:
+  ```
+  inputs
+  {
+  0 	background_layer
+  1 	foreground_layer
+  }
+  ```
+
+**Common mistakes:**
+- Forgetting `inputs` block entirely → nodes created but not connected
+- Using spaces instead of TAB → connection fails silently
+- Wrong node name → connection fails silently
+
+**Verify your chain:** Before collapsing, check every `.n` file that should receive input has an `inputs` block pointing to the correct source.
+
 ## Naming
 
 Always use descriptive names:
