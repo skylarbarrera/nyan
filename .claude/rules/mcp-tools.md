@@ -1,147 +1,140 @@
 # TouchDesigner MCP Tools Reference
 
-## ALWAYS USE THESE TOOLS - DO NOT JUST DESCRIBE
+## BATCH OPERATIONS - MINIMIZE CALLS
 
-You have 12 MCP tools. Use them directly to control TouchDesigner.
-
----
-
-## The Tools
-
-### Creating & Deleting
-| Tool | Use |
-|------|-----|
-| `create_td_node` | Create new operators |
-| `delete_td_node` | Remove operators |
-
-### Querying
-| Tool | Use |
-|------|-----|
-| `get_td_nodes` | List operators under a path |
-| `get_td_node_parameters` | Get an operator's parameters |
-| `get_td_node_errors` | Check for errors |
-| `get_td_info` | Server/environment info |
-
-### Modifying
-| Tool | Use |
-|------|-----|
-| `update_td_node_parameters` | Set parameter values |
-| `exec_node_method` | Call Python methods on operators |
-| `execute_python_script` | Run arbitrary Python in TD |
-
-### Documentation Lookup
-| Tool | Use |
-|------|-----|
-| `get_td_classes` | List available TD Python classes |
-| `get_td_class_details` | Get class documentation |
-| `get_module_help` | Python help() for TD modules |
+MCP calls have latency. **Batch multiple operations into single `execute_python_script` calls.**
 
 ---
 
-## Workflow Pattern
+## Primary Tool: `execute_python_script`
 
-### Step 1: Check What Exists
-```
-get_td_nodes(parent_path="/project1")
-```
-ALWAYS do this first. Don't create duplicates.
+Use this for almost everything. One call can create, wire, and configure multiple nodes:
 
-### Step 2: Create Node
-```
-create_td_node(
-  type="noiseTOP",
-  name="noise_base",
-  parent_path="/project1"
-)
-```
-Use descriptive names. Never use defaults.
-
-### Step 3: Set Parameters
-```
-update_td_node_parameters(
-  path="/project1/noise_base",
-  parameters={
-    "resolutionw": 1920,
-    "resolutionh": 1080,
-    "period": 2.0
-  }
-)
-```
-Set parameters immediately after creating.
-
-### Step 4: Wire Nodes (via Python)
-```
-execute_python_script(
-  script="op('/project1/noise_base').outputConnectors[0].connect(op('/project1/level1').inputConnectors[0])"
-)
-```
-Wire as you build. Don't batch.
-
-### Step 5: Verify
-```
-get_td_node_errors(path="/project1")
-```
-Check for errors after building.
-
----
-
-## Common Operations via Python Script
-
-### Connect Two Operators
-```python
-execute_python_script(script='''
-op('/project1/noise1').outputConnectors[0].connect(
-  op('/project1/level1').inputConnectors[0]
-)
-''')
-```
-
-### Create + Wire in One Script
 ```python
 execute_python_script(script='''
 parent = op('/project1')
+
+# Create nodes
 noise = parent.create(noiseTOP, 'noise_base')
 level = parent.create(levelTOP, 'level_adjust')
-noise.outputConnectors[0].connect(level.inputConnectors[0])
+null = parent.create(nullTOP, 'null_output')
+
+# Configure
 noise.par.resolutionw = 1920
 noise.par.resolutionh = 1080
 level.par.opacity = 0.8
+
+# Wire chain
+noise.outputConnectors[0].connect(level.inputConnectors[0])
+level.outputConnectors[0].connect(null.inputConnectors[0])
 ''')
 ```
 
-### Set Export/Expression
+**This replaces 9+ individual MCP calls with 1.**
+
+---
+
+## When to Use Individual Tools
+
+| Tool | Use When |
+|------|----------|
+| `get_td_nodes` | Checking what exists before building |
+| `get_td_node_parameters` | Need to read current values |
+| `get_td_node_errors` | Debugging after build |
+| `create_td_node` | Single node, simple case |
+| `update_td_node_parameters` | Quick param tweak |
+| `delete_td_node` | Remove single node |
+
+For **building systems** (3+ nodes) → always use `execute_python_script`
+
+---
+
+## Python Script Patterns
+
+### Create + Wire Chain
+```python
+execute_python_script(script='''
+p = op('/project1')
+a = p.create(audiodeviceinCHOP, 'in_audio')
+fft = p.create(audiospectrumCHOP, 'audio_fft')
+math = p.create(mathCHOP, 'audio_scale')
+null = p.create(nullCHOP, 'null_audio')
+
+a.outputConnectors[0].connect(fft.inputConnectors[0])
+fft.outputConnectors[0].connect(math.inputConnectors[0])
+math.outputConnectors[0].connect(null.inputConnectors[0])
+
+math.par.gain = 10
+''')
+```
+
+### POPs for Laser
+```python
+execute_python_script(script='''
+p = op('/project1')
+line = p.create(linePOP, 'laser_path')
+xform = p.create(transformPOP, 'laser_xform')
+null = p.create(nullPOP, 'null_laser')
+
+line.outputConnectors[0].connect(xform.inputConnectors[0])
+xform.outputConnectors[0].connect(null.inputConnectors[0])
+
+line.par.points = 100
+''')
+```
+
+### Parameter Expressions
 ```python
 execute_python_script(script='''
 op('/project1/noise_base').par.period.expr = "op('audio_bass')['chan1']"
+op('/project1/level1').par.opacity.expr = "op('midi_cc')['chan1']"
+''')
+```
+
+### Query + Build
+```python
+execute_python_script(script='''
+# Check existing
+existing = [c.name for c in op('/project1').children]
+print(f"Existing: {existing}")
+
+# Only create if missing
+if 'noise_base' not in existing:
+    op('/project1').create(noiseTOP, 'noise_base')
 ''')
 ```
 
 ---
 
-## Don't Ask - Just Do
+## Operator Type Names for Python
 
-BAD:
-```
-"I would create a noiseTOP and connect it to a levelTOP..."
-```
+```python
+# TOPs
+noiseTOP, levelTOP, compositeTOP, feedbackTOP, blurTOP
+transformTOP, renderTOP, nullTOP, moviefileinTOP
 
-GOOD:
-```
-create_td_node(type="noiseTOP", name="noise_base", parent_path="/project1")
-update_td_node_parameters(path="/project1/noise_base", parameters={"resolutionw": 1920, "resolutionh": 1080})
-create_td_node(type="levelTOP", name="level_adjust", parent_path="/project1")
-execute_python_script(script="op('/project1/noise_base').outputConnectors[0].connect(op('/project1/level_adjust').inputConnectors[0])")
+# CHOPs
+audiodeviceinCHOP, audiospectrumCHOP, midiinCHOP, oscinCHOP
+noiseCHOP, lfoCHOP, mathCHOP, filterCHOP, selectCHOP, nullCHOP
+
+# SOPs
+gridSOP, sphereSOP, boxSOP, noiseSOP, transformSOP, nullSOP
+
+# POPs
+linePOP, circlePOP, gridPOP, pointgeneratorPOP, noisePOP
+transformPOP, particlePOP, nullPOP
+
+# DATs
+tableDATT, textDAT, scriptDAT, oscin DAT, nullDAT
+
+# COMPs
+geometryCOMP, cameraCOMP, lightCOMP, containerCOMP, baseCOMP, nullCOMP
 ```
 
 ---
 
-## When Unsure About Operator Types
+## Don't Do
 
-Use the docs MCP:
-```
-get_td_classes()  # List all classes
-get_td_class_details(class_name="noiseTOP")  # Get specific details
-get_module_help(module="td")  # General TD help
-```
-
-Or use `touchdesigner-docs` MCP server for operator documentation.
+- Don't make 10 separate `create_td_node` calls - batch them
+- Don't wire one connection at a time - batch all wiring
+- Don't query after every operation - query once at start, verify once at end
