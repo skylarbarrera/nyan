@@ -67,6 +67,27 @@ Writing CHOP script?
 
 ---
 
+## Tutorials
+
+Read `data/tutorials/` for in-depth guides on specific topics:
+
+| Tutorial | Read When |
+|----------|-----------|
+| `introduction_to_python_tutorial.json` | Writing Script DATs, Python in TD |
+| `write_a_glsl_top.json` | Creating custom GLSL TOP shaders |
+| `write_a_glsl_material.json` | Writing GLSL materials for 3D |
+| `anatomy_of_a_chop.json` | Need to understand CHOP internals |
+| `build_a_list_comp.json` | Building dynamic UI lists |
+| `video_streaming_user_guide.json` | Video streaming, NDI, Syphon/Spout |
+
+**Triggers:**
+- User mentions "Python script" or "Script DAT" → read python tutorial
+- User mentions "GLSL", "shader", "custom effect" → read glsl tutorials
+- User mentions "streaming", "NDI", "Syphon", "Spout" → read video streaming guide
+- User building UI with lists → read list comp tutorial
+
+---
+
 ## Token Efficiency
 
 | Data | When to Load |
@@ -74,5 +95,6 @@ Writing CHOP script?
 | `patterns.json` (12KB) | Upfront when planning |
 | `operators/*.json` (~80KB each) | One at a time, per operator |
 | `python-api/*.json` (~10KB each) | Only when writing scripts |
+| `tutorials/*.json` (~50-400KB each) | Only when topic matches |
 
 Don't bulk-load. Query what you need, when you need it.

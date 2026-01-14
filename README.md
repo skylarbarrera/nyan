@@ -93,3 +93,7 @@ nyan/
 
 - [touchdesigner-mcp](https://github.com/8beeeaaat/touchdesigner-mcp) - Live control server
 - [TouchDesigner](https://derivative.ca) - Get TD
+
+## Credits
+
+Operator documentation, patterns, and tutorials in `data/` extracted from [bottobot/touchdesigner-mcp-server](https://github.com/bottobot/touchdesigner-mcp-server).
