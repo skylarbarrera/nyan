@@ -49,7 +49,9 @@ noise.outputConnectors[0].connect(level.inputConnectors[0])
 ```
 
 ### Offline Mode
-No TD needed. Claude writes ASCII, you collapse later:
+No TD needed. Claude writes ASCII, you collapse later.
+
+**Why offline is faster:** MCP calls have latency - each node creation is a round-trip. Offline mode writes files directly, so Claude can generate 50+ nodes in seconds instead of waiting on network calls.
 ```
 TOP:noise
 tile 100 100 130 90
@@ -89,10 +91,17 @@ nyan/
 └── .claude/rules/      # TD workflow rules
 ```
 
-## Links
+## Tools
 
+- **`toeexpand` / `toecollapse`** - TD's undocumented ASCII utilities (ships with TouchDesigner in `/bin`). See [our format guide](docs/toeexpand-editing-guide.md)
 - [touchdesigner-mcp](https://github.com/8beeeaaat/touchdesigner-mcp) - Live control server
 - [TouchDesigner](https://derivative.ca) - Get TD
+
+## Possible Next Steps
+
+- [ ] **Automated workflow** - Single command: expand → edit → validate → collapse → open
+- [ ] **Live reload** - Edit ASCII while TD is open, auto-collapse on save
+- [ ] **Typed DSL** - Parser and type system on top of ASCII format for better validation and Claude context
 
 ## Credits
 
