@@ -3,7 +3,8 @@
 You have MCP tools to control TouchDesigner directly. **USE THEM.** Don't just describe - create nodes, wire them, set parameters.
 
 **Quick reference:** See `td-essentials.md` for decision tree + top operators.
-**Full operator list:** Read `docs/td-operators-full.md` when needed.
+**Operator params:** Read `data/operators/{name}_{family}.json` before creating any operator.
+**Workflow patterns:** Check `data/patterns.json` for common operator chains.
 
 ---
 

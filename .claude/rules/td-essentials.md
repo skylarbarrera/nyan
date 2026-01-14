@@ -1,6 +1,6 @@
 # TouchDesigner Essentials
 
-Quick decision-making guide. For full operator list, read `docs/td-operators-full.md`.
+Quick decision-making guide. For full operator params, read `data/operators/{name}_{family}.json`.
 
 ---
 
@@ -145,15 +145,8 @@ Kinect/ZED/RealSense → POP processing → Render or Instance
 
 ---
 
-## When to Query MCP Docs
+## Operator Details
 
-Use `touchdesigner-docs` MCP when:
-- You need specific parameter names
-- You're unsure which operator fits
-- You need operator details beyond this quick ref
-- User asks about unfamiliar operator
+For specific parameter names and details, read `data/operators/{name}_{family}.json`.
 
-```
-"What parameters does noiseTOP have?"
-→ Query touchdesigner-docs MCP
-```
+See `td-reference-data.md` for how to use local reference data.
