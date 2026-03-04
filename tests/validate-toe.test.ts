@@ -11,6 +11,7 @@ import {
   validateTextFile,
   validateToc,
   validateWiring,
+  validateExpressions,
   validateProject,
   type NodeInfo,
 } from "../scripts/validate-toe";
@@ -322,6 +323,77 @@ beforeAll(() => {
       "}",
       "color 0.5 0.5 0.5",
       "end",
+    ].join("\n")
+  );
+
+  // ── Expression project ──
+  writeFixture(
+    "expression-project.toe.dir/noise_base.n",
+    [
+      "TOP:noise",
+      "tile 100 200 130 90",
+      "flags =  viewer 1 parlanguage 0",
+      "color 0.5 0.5 0.5",
+      "end",
+    ].join("\n")
+  );
+  writeFixture(
+    "expression-project.toe.dir/level_adjust.n",
+    [
+      "TOP:level",
+      "tile 250 200 130 90",
+      "flags =  viewer 1 parlanguage 0",
+      "inputs",
+      "{",
+      "0\tnoise_base",
+      "}",
+      "color 0.5 0.5 0.5",
+      "end",
+    ].join("\n")
+  );
+
+  // .parm with valid expression referencing existing node
+  writeFixture(
+    "expression-project.toe.dir/noise_base.parm",
+    [
+      "?",
+      "resolutionw 0 1920",
+      "resolutionh 0 1080",
+      "period 17 op('level_adjust')['chan1']",
+      "?",
+    ].join("\n")
+  );
+
+  // .parm with expression referencing nonexistent node
+  writeFixture(
+    "expression-project.toe.dir/level_adjust.parm",
+    [
+      "?",
+      "opacity 17 op('nonexistent')['chan1']",
+      "brightness 17 op(\"also_missing\")['chan1']",
+      "?",
+    ].join("\n")
+  );
+
+  // .parm with only literal values (no expressions)
+  writeFixture(
+    "expression-project.toe.dir/plain.parm",
+    [
+      "?",
+      "resolutionw 0 1920",
+      "resolutionh 0 1080",
+      "period 0 1.5",
+      "?",
+    ].join("\n")
+  );
+
+  // .parm with absolute path expression
+  writeFixture(
+    "expression-project.toe.dir/abspath.parm",
+    [
+      "?",
+      "period 17 op('/project1/audio/fft')['chan1']",
+      "?",
     ].join("\n")
   );
 });
@@ -755,6 +827,86 @@ describe("validateWiring", () => {
   });
 });
 
+// ─── Tests: validateExpressions ───────────────────────────────────
+
+describe("validateExpressions", () => {
+  const exprNodes: Record<string, NodeInfo> = {
+    noise_base: {
+      name: "noise_base",
+      family: "TOP",
+      type: "noise",
+      inputs: {},
+      path: "noise_base.n",
+    },
+    level_adjust: {
+      name: "level_adjust",
+      family: "TOP",
+      type: "level",
+      inputs: { 0: "noise_base" },
+      path: "level_adjust.n",
+    },
+  };
+
+  test("valid op() reference produces no warnings", () => {
+    const r = new ValidationResult();
+    validateExpressions(
+      exprNodes,
+      [join(FIXTURES, "expression-project.toe.dir/noise_base.parm")],
+      r
+    );
+    expect(r.warnings).toEqual([]);
+    expect(r.errors).toEqual([]);
+  });
+
+  test("invalid op() reference produces warning", () => {
+    const r = new ValidationResult();
+    validateExpressions(
+      exprNodes,
+      [join(FIXTURES, "expression-project.toe.dir/level_adjust.parm")],
+      r
+    );
+    expect(r.warnings.some((w) => w.includes("nonexistent"))).toBe(true);
+    expect(r.warnings.some((w) => w.includes("also_missing"))).toBe(true);
+    // Should be warnings, not errors
+    expect(r.errors).toEqual([]);
+  });
+
+  test("absolute path op() reference produces info note", () => {
+    const r = new ValidationResult();
+    validateExpressions(
+      exprNodes,
+      [join(FIXTURES, "expression-project.toe.dir/abspath.parm")],
+      r
+    );
+    expect(r.warnings).toEqual([]);
+    expect(r.errors).toEqual([]);
+    expect(r.info.some((i) => i.includes("/project1/audio/fft"))).toBe(true);
+  });
+
+  test("no expressions (flag 0 only) produces no warnings", () => {
+    const r = new ValidationResult();
+    validateExpressions(
+      exprNodes,
+      [join(FIXTURES, "expression-project.toe.dir/plain.parm")],
+      r
+    );
+    expect(r.warnings).toEqual([]);
+    expect(r.errors).toEqual([]);
+    expect(r.info).toEqual([]);
+  });
+
+  test("double-quoted op() reference detected", () => {
+    const r = new ValidationResult();
+    validateExpressions(
+      exprNodes,
+      [join(FIXTURES, "expression-project.toe.dir/level_adjust.parm")],
+      r
+    );
+    // level_adjust.parm has both op('nonexistent') and op("also_missing")
+    expect(r.warnings.some((w) => w.includes("also_missing"))).toBe(true);
+  });
+});
+
 // ─── Tests: validateProject (integration) ──────────────────────────
 
 describe("validateProject", () => {
@@ -798,6 +950,18 @@ describe("validateProject", () => {
       false
     );
     expect(r.errors.some((e) => e.includes("Noise_Base"))).toBe(true);
+  });
+
+  test("expression project warns on bad op() references", () => {
+    const r = validateProject(
+      join(FIXTURES, "expression-project.toe.dir"),
+      false
+    );
+    // Should warn about nonexistent and also_missing expression references
+    expect(r.warnings.some((w) => w.includes("unknown node 'nonexistent'"))).toBe(true);
+    expect(r.warnings.some((w) => w.includes("unknown node 'also_missing'"))).toBe(true);
+    // Valid op('level_adjust') reference should NOT produce an unknown node warning
+    expect(r.warnings.some((w) => w.includes("unknown node 'level_adjust'"))).toBe(false);
   });
 });
 

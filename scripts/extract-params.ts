@@ -239,6 +239,54 @@ function extractParamsFromDescription(description: string): ParamInfo[] {
   return params;
 }
 
+function extractParamsFromFields(parameters: any[]): ParamInfo[] {
+  // Collect all option values across all params to identify menu-item entries
+  const allOptionValues = new Set<string>();
+  for (const param of parameters) {
+    for (const opt of param.options || []) {
+      if (opt.value) allOptionValues.add(opt.value);
+    }
+  }
+
+  const params: ParamInfo[] = [];
+  const seenIds = new Set<string>();
+
+  for (const param of parameters) {
+    const name: string = param.name || "";
+    if (!name) continue;
+    // Skip single-char names (P, N, etc. are generic placeholders)
+    if (name.length <= 1) continue;
+
+    // Skip menu-item echo entries: name is an option value elsewhere AND
+    // the param itself is a menu that contains its own name in its options.
+    // This distinguishes real params (e.g. "period" type:string) from
+    // menu-item echoes (e.g. "perlin2d" type:menu with perlin2d in its options).
+    if (allOptionValues.has(name)) {
+      const ownOptions = (param.options || []).map((o: any) => o.value);
+      if (ownOptions.includes(name)) continue;
+    }
+
+    // Deduplicate
+    if (seenIds.has(name)) continue;
+    seenIds.add(name);
+
+    const label: string = param.label || "";
+    const menuItems: string[] = [];
+    for (const opt of param.options || []) {
+      if (opt.value) menuItems.push(opt.value);
+    }
+
+    params.push({
+      id: name,
+      description: label || `Configure ${name}`,
+      menu: menuItems.length > 0 ? menuItems.slice(0, 12) : null,
+      sub: null,
+    });
+  }
+
+  return params;
+}
+
 function extractParams(filepath: string, verbose: boolean): ExtractResult {
   let raw: string;
   try {
@@ -278,6 +326,17 @@ function extractParams(filepath: string, verbose: boolean): ExtractResult {
     // Only need to process the first parameter with a description
     // (they all contain the same blob)
     if (extracted.length > 0) break;
+  }
+
+  // Fallback for POP/SOP operators with per-field params (no description blob)
+  if (allParams.length === 0) {
+    const fieldParams = extractParamsFromFields(data.parameters || []);
+    for (const p of fieldParams) {
+      if (!seenIds.has(p.id)) {
+        seenIds.add(p.id);
+        allParams.push(p);
+      }
+    }
   }
 
   // Always classify common params (verbose controls display, not classification)

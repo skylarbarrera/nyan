@@ -167,6 +167,66 @@ describe("Audio Device In extraction", () => {
   });
 });
 
+describe("POP extraction", () => {
+  const output = run("noise_pop").stdout;
+
+  it("returns more than 0 params", () => {
+    expect(output).not.toContain("# Total: 0 parameters");
+    expect(output).toMatch(/# Total: \d+ parameters/);
+  });
+
+  it("extracts type parameter", () => {
+    expect(output).toMatch(/^\s+type\s+#/m);
+  });
+
+  it("extracts seed parameter", () => {
+    expect(output).toMatch(/^\s+seed\s+#/m);
+  });
+
+  it("extracts period parameter", () => {
+    expect(output).toMatch(/^\s+period\s+#/m);
+  });
+
+  it("extracts harmon parameter", () => {
+    expect(output).toMatch(/^\s+harmon\s+#/m);
+  });
+
+  it("type has menu items (perlin2d, simplex2d)", () => {
+    const typeLine = output.split("\n").find((l: string) => l.match(/^\s+type\s+#/));
+    expect(typeLine).toBeDefined();
+    expect(typeLine).toContain("perlin2d");
+    expect(typeLine).toContain("simplex2d");
+  });
+
+  it("has no duplicate param IDs", () => {
+    const paramLines = output.split("\n").filter((l: string) => l.match(/^\s+\w+\s+#/));
+    const ids = paramLines.map((l: string) => l.trim().split(/\s+/)[0]);
+    const unique = new Set(ids);
+    expect(ids.length).toBe(unique.size);
+  });
+
+  it("skips menu value entries (perlin2d is not a param)", () => {
+    // perlin2d is a menu option value under type, not a real param
+    expect(output).not.toMatch(/^\s+perlin2d\s+#/m);
+  });
+
+  it("skips single-char name P", () => {
+    // P is a generic placeholder, not a real param name
+    expect(output).not.toMatch(/^\s+P\s+#/m);
+  });
+
+  it("extracts amp parameter", () => {
+    expect(output).toMatch(/^\s+amp\s+#/m);
+  });
+
+  it("extracts combineop with menu items", () => {
+    const line = output.split("\n").find((l: string) => l.match(/^\s+combineop\s+#/));
+    expect(line).toBeDefined();
+    expect(line).toContain("set");
+    expect(line).toContain("add");
+  });
+});
+
 describe("--verbose flag", () => {
   it("shows common params in verbose mode", () => {
     const { stdout } = run("noise_top --verbose");

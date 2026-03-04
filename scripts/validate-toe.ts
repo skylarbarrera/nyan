@@ -450,6 +450,67 @@ export function validateWiring(
   }
 }
 
+export function validateExpressions(
+  nodes: Record<string, NodeInfo>,
+  parmFiles: string[],
+  result: ValidationResult
+): void {
+  const nodeNames = new Set(Object.keys(nodes));
+  const opRefRegex = /op\(['"]([^'"]+)['"]\)/g;
+
+  for (const filepath of parmFiles) {
+    const relPath = basename(filepath);
+    let content: string;
+    try {
+      content = readFileSync(filepath, "utf-8");
+    } catch {
+      // File read errors are already reported by validateParmFile
+      continue;
+    }
+
+    const lines = content.split("\n");
+    let inBlock = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const stripped = lines[i].trim();
+
+      if (stripped === "?") {
+        inBlock = !inBlock;
+        continue;
+      }
+
+      if (!inBlock || !stripped) continue;
+
+      const parts = stripped.split(/\s+/);
+      if (parts.length < 3) continue;
+
+      const flags = parseInt(parts[1], 10);
+      if (flags !== 17) continue;
+
+      // This is an expression line — extract op() references
+      const value = parts.slice(2).join(" ");
+      let match: RegExpExecArray | null;
+      opRefRegex.lastIndex = 0;
+
+      while ((match = opRefRegex.exec(value)) !== null) {
+        const refName = match[1];
+
+        if (refName.startsWith("/")) {
+          // Absolute path — cross-container reference, add info note
+          result.addInfo(
+            `${relPath}:${i + 1} - Cross-container reference: op('${refName}')`
+          );
+        } else if (!nodeNames.has(refName)) {
+          result.addWarning(
+            relPath,
+            `Line ${i + 1}: Expression references unknown node '${refName}' (may be cross-container)`
+          );
+        }
+      }
+    }
+  }
+}
+
 export function validateProject(
   dirPath: string,
   verbose: boolean = false
@@ -486,9 +547,11 @@ export function validateProject(
   }
 
   // Validate .parm files
+  const parmFilePaths: string[] = [];
   for (const f of allFiles) {
     if (extname(f) === ".parm") {
       parmCount++;
+      parmFilePaths.push(f);
       validateParmFile(f, result);
     }
   }
@@ -522,6 +585,9 @@ export function validateProject(
 
   // Validate wiring
   validateWiring(nodes, result);
+
+  // Validate expression references in .parm files
+  validateExpressions(nodes, parmFilePaths, result);
 
   // Summary
   result.addInfo(

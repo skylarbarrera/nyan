@@ -306,7 +306,7 @@ Bytes 27+:    Actual text content (UTF-8 encoded)
 
 ### Binary Header (Hex)
 
-The 20-byte metadata section is typically:
+The 22-byte metadata section is typically:
 ```
 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00 02 00 00
 ```
@@ -328,7 +328,7 @@ def write_td_text_file(filepath, content):
     # Header marker
     header = b'2\n*'
 
-    # Binary metadata (20 bytes)
+    # Binary metadata (22 bytes)
     meta = bytes([0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,2,0,0])
 
     # Encode content
