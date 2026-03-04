@@ -299,9 +299,9 @@ DATs with text content have a `.text` file.
 
 ```
 Bytes 0-2:    "2\n*"              (3 bytes - format marker)
-Bytes 3-22:   Binary metadata     (20 bytes of flags/settings)
-Bytes 23-24:  Content length      (2 bytes, big-endian uint16)
-Bytes 25+:    Actual text content (UTF-8 encoded)
+Bytes 3-24:   Binary metadata     (22 bytes of flags/settings)
+Bytes 25-26:  Content length      (2 bytes, big-endian uint16)
+Bytes 27+:    Actual text content (UTF-8 encoded)
 ```
 
 ### Binary Header (Hex)

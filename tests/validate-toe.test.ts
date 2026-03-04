@@ -716,6 +716,43 @@ describe("validateWiring", () => {
     validateWiring(nodes, r);
     expect(r.warnings.some((w) => w.includes("orphan"))).toBe(true);
   });
+
+  test("does not warn null nodes that have inputs", () => {
+    const r = new ValidationResult();
+    const nodes: Record<string, NodeInfo> = {
+      noise_src: {
+        name: "noise_src",
+        family: "TOP",
+        type: "noise",
+        inputs: {},
+        path: "noise_src.n",
+      },
+      null_out: {
+        name: "null_out",
+        family: "TOP",
+        type: "null",
+        inputs: { 0: "noise_src" },
+        path: "null_out.n",
+      },
+    };
+    validateWiring(nodes, r);
+    expect(r.warnings).toEqual([]);
+  });
+
+  test("warns null nodes with no inputs (disconnected)", () => {
+    const r = new ValidationResult();
+    const nodes: Record<string, NodeInfo> = {
+      null_dangling: {
+        name: "null_dangling",
+        family: "TOP",
+        type: "null",
+        inputs: {},
+        path: "null_dangling.n",
+      },
+    };
+    validateWiring(nodes, r);
+    expect(r.warnings.some((w) => w.includes("disconnected"))).toBe(true);
+  });
 });
 
 // ─── Tests: validateProject (integration) ──────────────────────────

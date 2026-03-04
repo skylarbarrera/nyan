@@ -17,6 +17,7 @@ import {
   statSync,
 } from "fs";
 import { join, basename, extname } from "path";
+import { spawnSync } from "child_process";
 
 // ─── Types ─────────────────────────────────────────────────────────
 
@@ -69,16 +70,18 @@ const VALID_FAMILIES = new Set([
   "POP",
 ]);
 
-// Types that are expected to have no incoming references (sources and terminals)
-const ORPHAN_EXEMPT_TYPES = new Set([
+// Source types that legitimately have no incoming references (generators)
+const SOURCE_TYPES = new Set([
   "noise",
   "constant",
   "moviefilein",
   "audiodevicein",
   "midiin",
   "oscin",
-  "null",
 ]);
+
+// Terminal types — expected to not be referenced as sources, but should have inputs
+const TERMINAL_TYPES = new Set(["null"]);
 
 // ─── Helpers ───────────────────────────────────────────────────────
 
@@ -318,6 +321,18 @@ export function validateTextFile(
     return;
   }
 
+  // Validate Python syntax (if python3 is available)
+  if (scriptContent.trim()) {
+    const proc = spawnSync("python3", ["-c", `import ast; ast.parse(${JSON.stringify(scriptContent)})`], {
+      encoding: "utf-8",
+      timeout: 5000,
+    });
+    if (proc.status !== null && proc.status !== 0 && proc.error === undefined) {
+      const errMsg = (proc.stderr || "").split("\n").filter((l) => l.includes("SyntaxError") || l.includes("Error")).pop();
+      result.addError(relPath, null, `Python SyntaxError: ${errMsg || "invalid syntax"}`);
+    }
+  }
+
   // Check for ChopExec callbacks
   const stem = basename(filepath, extname(filepath)).toLowerCase();
   if (stem.includes("chopexec") || stem.includes("chop_exec")) {
@@ -416,7 +431,16 @@ export function validateWiring(
   for (const name of nodeNames) {
     if (!referenced.has(name)) {
       const node = nodes[name];
-      if (!ORPHAN_EXEMPT_TYPES.has(node.type)) {
+      if (TERMINAL_TYPES.has(node.type)) {
+        // Terminals (null) are expected to not be referenced as sources,
+        // but they should have their own inputs
+        if (Object.keys(node.inputs || {}).length === 0) {
+          result.addWarning(
+            node.path,
+            "Terminal node has no inputs (disconnected)"
+          );
+        }
+      } else if (!SOURCE_TYPES.has(node.type)) {
         result.addWarning(
           node.path,
           "No incoming connections (orphan source)"

@@ -99,4 +99,4 @@ op('audio_bass').par.exportmethod = 'replace'
 - Don't use maximum resolution unnecessarily
 - Don't create operators you weren't asked for
 - Don't use Particle SOP for large counts (use POPs)
-- Don't describe what you would do - USE THE MCP TOOLS
+- Don't describe what you would do - USE THE SKILLS AND TOOLS

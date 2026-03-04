@@ -136,7 +136,7 @@ linePOP, circlePOP, gridPOP, pointgeneratorPOP, noisePOP
 transformPOP, particlePOP, nullPOP
 
 # DATs
-tableDATT, textDAT, scriptDAT, oscin DAT, nullDAT
+tableDAT, textDAT, scriptDAT, oscinDAT, nullDAT
 
 # COMPs
 geometryCOMP, cameraCOMP, lightCOMP, containerCOMP, baseCOMP, nullCOMP

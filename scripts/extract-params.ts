@@ -240,8 +240,21 @@ function extractParamsFromDescription(description: string): ParamInfo[] {
 }
 
 function extractParams(filepath: string, verbose: boolean): ExtractResult {
-  const raw = readFileSync(filepath, "utf-8");
-  const data = JSON.parse(raw);
+  let raw: string;
+  try {
+    raw = readFileSync(filepath, "utf-8");
+  } catch (e: any) {
+    process.stderr.write(`Error reading file: ${e.message}\n`);
+    process.exit(1);
+  }
+
+  let data: any;
+  try {
+    data = JSON.parse(raw);
+  } catch (e: any) {
+    process.stderr.write(`Error parsing JSON in ${filepath}: ${e.message}\n`);
+    process.exit(1);
+  }
 
   const opName: string = data.name || basename(filepath, ".json");
   const opCategory: string = data.category || "";

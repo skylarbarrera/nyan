@@ -147,6 +147,9 @@ Kinect/ZED/RealSense → POP processing → Render or Instance
 
 ## Operator Details
 
-For specific parameter names and details, read `data/operators/{name}_{family}.json`.
+Before creating any operator, extract its parameters:
+```bash
+bun scripts/extract-params.ts <operator_name>
+```
 
-See `td-reference-data.md` for how to use local reference data.
+Never read the raw JSON files directly (~150KB each). See `td-reference-data.md` for details.

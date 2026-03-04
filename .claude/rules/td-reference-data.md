@@ -43,18 +43,6 @@ bun scripts/extract-params.ts level_top --verbose
 
 The extractor parses the raw operator JSON (~150KB) and outputs only the parameter IDs you need (~1KB).
 
-### Filename Convention
-
-Operator names map to filenames:
-```
-Noise TOP       → noise_top.json
-Audio Device In → audiodevicein_chop.json
-Movie File In   → moviefilein_top.json
-CHOP Execute    → chopexecute_dat.json
-```
-
-The extractor handles fuzzy matching, so `"Audio Device In"` works directly.
-
 ### Why Not Read the JSON Directly?
 
 Each operator JSON is ~80-150KB with a giant embedded description blob. The extractor:
@@ -65,19 +53,17 @@ Each operator JSON is ~80-150KB with a giant embedded description blob. The extr
 
 **Do NOT** read operator JSONs directly — use the extractor.
 
----
+The extractor handles fuzzy matching, so `"Audio Device In"` works directly.
 
-## Filename Convention
+### Filename Convention
 
-Operator names map to filenames:
+Operator files use pattern: `lowercase_with_underscores_{family}.json`
 ```
 Noise TOP       → noise_top.json
 Audio Device In → audio_device_in_chop.json
 Movie File In   → movie_file_in_top.json
 CHOP Execute    → chop_execute_dat.json
 ```
-
-Pattern: `lowercase_with_underscores_{family}.json`
 
 ---
 
