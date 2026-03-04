@@ -2,6 +2,8 @@
 """
 TouchDesigner ASCII Validator
 
+DEPRECATED: Ported to TypeScript. Use: bun scripts/validate-toe.ts
+
 Validates expanded .toe.dir projects before collapse.
 Catches errors that TD silently fails on.
 

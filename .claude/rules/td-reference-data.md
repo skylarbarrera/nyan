@@ -2,6 +2,12 @@
 
 Local operator documentation in `data/`. Use this instead of MCP docs.
 
+**MANDATORY: Before creating ANY operator, extract its parameters:**
+```bash
+bun scripts/extract-params.ts <operator_name>
+```
+This reduces ~150KB per operator JSON → ~1KB of actionable parameter IDs for `.parm` authoring. **Never guess parameter names.**
+
 ---
 
 ## Planning a Build
@@ -22,21 +28,42 @@ This tells you what operators chain together for common tasks.
 
 ## Before Creating Any Operator
 
-Look up its parameters in `data/operators/`:
+**MANDATORY:** Extract parameter IDs using the extractor:
 
-1. Convert name to filename: `Noise TOP` → `noise_top.json`
-2. Read `data/operators/noise_top.json`
-3. Set required parameters from the JSON
+```bash
+# By filename
+bun scripts/extract-params.ts noise_top
 
-**Example:**
+# By display name (fuzzy match)
+bun scripts/extract-params.ts "Audio Device In"
+
+# Full params including common/shared
+bun scripts/extract-params.ts level_top --verbose
 ```
-Creating a Noise TOP?
-→ Read data/operators/noise_top.json
-→ See 88 parameters with types, defaults, descriptions
-→ Set resolution, period, harmonics, etc. correctly
+
+The extractor parses the raw operator JSON (~150KB) and outputs only the parameter IDs you need (~1KB).
+
+### Filename Convention
+
+Operator names map to filenames:
+```
+Noise TOP       → noise_top.json
+Audio Device In → audiodevicein_chop.json
+Movie File In   → moviefilein_top.json
+CHOP Execute    → chopexecute_dat.json
 ```
 
-**Do NOT** read multiple operator files at once. Read one at a time as you create each node.
+The extractor handles fuzzy matching, so `"Audio Device In"` works directly.
+
+### Why Not Read the JSON Directly?
+
+Each operator JSON is ~80-150KB with a giant embedded description blob. The extractor:
+- Parses the description to find real parameter IDs
+- Filters common/shared params (resolution, format, etc.)
+- Outputs clean, compact format ready for `.parm` authoring
+- Shows menu options for enum parameters
+
+**Do NOT** read operator JSONs directly — use the extractor.
 
 ---
 

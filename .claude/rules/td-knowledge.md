@@ -1,10 +1,14 @@
 # TouchDesigner Knowledge Base
 
-You have MCP tools to control TouchDesigner directly. **USE THEM.** Don't just describe - create nodes, wire them, set parameters.
+**Use skills for all TD work:**
+- `/td-build` — Build node networks (enforces pattern lookup + param extraction + validation)
+- `/td-edit` — Edit projects offline via ASCII expand/collapse pipeline
+- `/td-inspect` — Inspect project structure, wiring, parameters
 
 **Quick reference:** See `td-essentials.md` for decision tree + top operators.
-**Operator params:** Read `data/operators/{name}_{family}.json` before creating any operator.
+**Operator params:** Run `bun scripts/extract-params.ts <operator>` before creating any operator.
 **Workflow patterns:** Check `data/patterns.json` for common operator chains.
+**Validation:** Run `bun scripts/validate-toe.ts <dir>` before collapsing ASCII edits.
 
 ---
 

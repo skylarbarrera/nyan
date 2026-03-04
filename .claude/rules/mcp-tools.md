@@ -1,5 +1,16 @@
 # TouchDesigner MCP Tools Reference
 
+## MCP is for LIVE SINGLE-NODE TWEAKS ONLY
+
+**For building networks (3+ nodes), use `/td-build` skill with ASCII mode.** ASCII builds are faster, validatable, and version-controllable.
+
+Use MCP only when:
+- TD is running AND you need immediate visual feedback
+- Making a quick parameter tweak to an existing node
+- Querying existing node state
+
+For everything else, use the ASCII pipeline via `/td-build` or `/td-edit` skills.
+
 ## BATCH OPERATIONS - MINIMIZE CALLS
 
 MCP calls have latency. **Batch multiple operations into single `execute_python_script` calls.**

@@ -1,5 +1,21 @@
 # TouchDesigner Build Workflow
 
+## ASCII is DEFAULT
+
+**Use the ASCII expand/collapse pipeline for all builds unless TD is running AND you need live feedback.** ASCII builds are faster, version-controllable, and validatable before opening in TD.
+
+**Skills available:**
+- `/td-build` — Build new node networks (enforces data lookup + validation)
+- `/td-edit` — Edit existing projects offline
+- `/td-inspect` — Inspect project structure, wiring, parameters
+
+## Data Checkpoint (MANDATORY)
+
+Before building anything:
+1. **Read `data/patterns.json`** — find matching workflow pattern
+2. **Run `bun scripts/extract-params.ts <operator>`** for each operator — get correct parameter IDs
+3. **Never guess parameter names** — they're often abbreviated (harmon, rough, exp, amp)
+
 ## Context First: toeexpand is Source of Truth
 
 Before building anything, understand what exists using **expanded ASCII files**.
@@ -29,15 +45,26 @@ See `docs/toeexpand-editing-guide.md` for full format reference.
 
 | Task | Use |
 |------|-----|
+| **Build new networks** | **ASCII: `/td-build` skill (DEFAULT)** |
+| **Edit existing project** | **ASCII: `/td-edit` skill (DEFAULT)** |
+| **Inspect project** | **`/td-inspect` skill** |
 | Understand existing project | toeexpand → read ASCII files |
-| Create new nodes (live) | MCP `execute_python_script` |
+| Quick live single-node tweak | MCP (only when TD is running) |
 | Batch modify parameters | Edit ASCII → toecollapse |
-| Quick live tweaks | MCP `update_td_node_parameters` |
 | Scaffold new project | Write ASCII files → toecollapse |
 
-## Building with MCP
+## Building with ASCII (DEFAULT)
 
-When TD is running and you need live changes:
+Use the `/td-build` skill for new networks. It enforces:
+1. Pattern lookup from `data/patterns.json`
+2. Parameter extraction via `bun scripts/extract-params.ts`
+3. Validation via `bun scripts/validate-toe.ts`
+
+For edits to existing projects, use `/td-edit`.
+
+## Building with MCP (Live Only)
+
+When TD is running and you need live changes to a **single node or quick tweak**:
 
 ### Batch Operations (Preferred)
 
